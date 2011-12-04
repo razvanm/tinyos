@@ -7,9 +7,15 @@ if [[ "$1" == deb ]]
 then
     ARCH_TYPE=$(dpkg-architecture -qDEB_HOST_ARCH)
     PREFIX=$(pwd)/${NESC}/debian/usr
-    PACKAGES_DIR=$(pwd)/../../packages/${ARCH_TYPE}
+    PACKAGES_DIR=$(pwd)/../../packages/debian/${ARCH_TYPE}
     mkdir -p ${PACKAGES_DIR}
 fi
+
+if [[ "$1" == rpm ]]
+then
+    PREFIX=$(pwd)/${NESC}/fedora/usr
+fi
+
 : ${PREFIX:=$(pwd)/../../local}
 
 download()
@@ -32,7 +38,7 @@ build()
     )
 }
 
-package()
+package_deb()
 {
     echo Packaging ${NESC}
     cd ${NESC}
@@ -44,6 +50,16 @@ package()
         | sed 's/@architecture@/'${ARCH_TYPE}'/' \
         > debian/DEBIAN/control
     dpkg-deb --build debian ${PACKAGES_DIR}/nesc-${NESC_VER}.deb
+}
+
+package_rpm()
+{
+    echo Packaging ${NESC}
+    rpmbuild \
+	-D "version ${NESC_VER}" \
+	-D "release `date +%Y%m%d`" \
+	-D "prefix ${PREFIX}" \
+	-bb nesc.spec
 }
 
 remove()
@@ -78,7 +94,13 @@ case $1 in
     deb)
 	download
 	build
-	package
+	package_deb
+	;;
+
+    rpm)
+	download
+	build
+	package_rpm
 	;;
 
     *)

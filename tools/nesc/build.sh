@@ -3,9 +3,9 @@
 NESC_VER=1.3.3
 NESC=nesc-${NESC_VER}
 
-ARCH_TYPE=$(dpkg-architecture -qDEB_HOST_ARCH)
 if [[ "$1" == deb ]]
 then
+    ARCH_TYPE=$(dpkg-architecture -qDEB_HOST_ARCH)
     PREFIX=$(pwd)/${NESC}/debian/usr
     PACKAGES_DIR=$(pwd)/../../packages/${ARCH_TYPE}
     mkdir -p ${PACKAGES_DIR}

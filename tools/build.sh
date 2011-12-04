@@ -3,9 +3,9 @@
 TINYOS_TOOLS_VER=1.2.4
 TINYOS_TOOLS=tinyos-tools-${TINYOS_TOOLS_VER}
 
-ARCH_TYPE=$(dpkg-architecture -qDEB_HOST_ARCH)
 if [[ "$1" == deb ]]
 then
+    ARCH_TYPE=$(dpkg-architecture -qDEB_HOST_ARCH)
     PREFIX=$(pwd)/${TINYOS_TOOLS}/debian/usr
     PACKAGES_DIR=$(pwd)/../packages/${ARCH_TYPE}
     mkdir -p ${PACKAGES_DIR}

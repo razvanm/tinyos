@@ -46,6 +46,12 @@ then
     mkdir -p ${PACKAGES_DIR}
     mkdir -p ${PACKAGES_DIR/${ARCH_TYPE}/all}
 fi
+
+if [[ "$1" == rpm ]]
+then
+    PREFIX=$(pwd)/fedora/usr
+fi
+
 : ${PREFIX:=$(pwd)/../../../../local}
 
 last_patch()
@@ -116,13 +122,13 @@ build_binutils()
 	    --target=msp430
 	make -j4
 	make install
-	rm -rf ${PREFIX}{/lib/libiberty.a,/share/info,/share/locale}
+	rm -rf ${PREFIX}{/lib*/libiberty.a,/share/info,/share/locale}
 	find ${PREFIX} -empty | xargs rm -rf
     )
     ( cd $PREFIX ; find . -type f ) > msp430-binutils.files
 }
 
-package_binutils()
+package_binutils_deb()
 {
     set -e
     (
@@ -139,6 +145,18 @@ package_binutils()
 	dpkg-deb --build debian \
 	    ${PACKAGES_DIR}/msp430-binutils-${VER}.deb
     )
+}
+
+package_binutils_rpm()
+{
+    VER=${BINUTILS_VER}
+    LAST_PATCH=$(last_patch msp430-binutils-*.patch)
+    RPM_VER=${VER}+LTS${MSPGCC_VER}${LAST_PATCH}
+    rpmbuild \
+	-D "version ${RPM_VER}" \
+	-D "release `date +%Y%m%d`" \
+	-D "prefix ${PREFIX}" \
+	-bb msp430-binutils.spec
 }
 
 build_gcc()
@@ -176,13 +194,13 @@ build_gcc()
     	    --enable-languages=c
         CPPFLAGS=-D_FORTIFY_SOURCE=0 make -j4
     	make install
-    	rm -rf ${PREFIX}{/lib/libiberty.a,/share/info,/share/locale,/share/man/man7}
+    	rm -rf ${PREFIX}{/lib*/libiberty.a,/share/info,/share/locale,/share/man/man7}
     	find ${PREFIX} -empty | xargs rm -rf
     )
     ( cd $PREFIX ; find . -type f ) > msp430-gcc.files
 }
 
-package_gcc()
+package_gcc_deb()
 {
     set -e
     (
@@ -206,6 +224,18 @@ package_gcc()
     )
 }
 
+package_gcc_rpm()
+{
+    VER=${GCC_VER}
+    LAST_PATCH=$(last_patch msp430-gcc-*.patch)
+    RPM_VER=${VER}+LTS${MSPGCC_VER}${LAST_PATCH}
+    rpmbuild \
+	-D "version ${RPM_VER}" \
+	-D "release `date +%Y%m%d`" \
+	-D "prefix ${PREFIX}" \
+	-bb msp430-gcc.spec
+}
+
 build_mcu()
 {
     echo Unpacking ${MSP430MCU}.tar.bz2
@@ -221,7 +251,7 @@ build_mcu()
     ( cd $PREFIX ; find . -type f ) > msp430mcu.files
 }
 
-package_mcu()
+package_mcu_deb()
 {
     set -e
     (
@@ -246,6 +276,18 @@ package_mcu()
     )
 }
 
+package_mcu_rpm()
+{
+    VER=${MSP430MCU_VER}
+    LAST_PATCH=$(last_patch msp430mcu-*.patch)
+    RPM_VER=${VER}+LTS${MSPGCC_VER}${LAST_PATCH}
+    rpmbuild \
+	-D "version ${RPM_VER}" \
+	-D "release `date +%Y%m%d`" \
+	-D "prefix ${PREFIX}" \
+	-bb msp430mcu.spec
+}
+
 build_libc()
 {
     echo Unpacking ${MSP430LIBC}.tar.bz2
@@ -264,7 +306,7 @@ build_libc()
     ( cd $PREFIX ; find . -type f ) > msp430-libc.files
 }
 
-package_libc()
+package_libc_deb()
 {
     set -e
     (
@@ -289,6 +331,18 @@ package_libc()
     )
 }
 
+package_libc_rpm()
+{
+    VER=${MSP430LIBC_VER}
+    LAST_PATCH=$(last_patch msp430-libc-*.patch)
+    RPM_VER=${VER}+LTS${MSPGCC_VER}${LAST_PATCH}
+    rpmbuild \
+	-D "version ${RPM_VER}" \
+	-D "release `date +%Y%m%d`" \
+	-D "prefix ${PREFIX}" \
+	-bb msp430-libc.spec
+}
+
 build_gdb()
 {
     echo Unpacking ${GDB}a.tar.gz
@@ -305,12 +359,12 @@ build_gdb()
 	    --target=msp430
 	make -j4
 	make install
-	rm -rf ${PREFIX}{/lib/libiberty.a,/share/info,/share/locale,/share/gdb/syscalls}
+	rm -rf ${PREFIX}{/lib*/libiberty.a,/share/info,/share/locale,/share/gdb/syscalls}
 	find ${PREFIX} -empty | xargs rm -rf
     )
 }
 
-package_gdb()
+package_gdb_deb()
 {
     set -e
     (
@@ -334,7 +388,19 @@ package_gdb()
     )
 }
 
-package_dummy()
+package_gdb_rpm()
+{
+    VER=${GDB_VER}
+    LAST_PATCH=$(last_patch msp430-gdb-*.patch)
+    RPM_VER=${VER}+LTS${MSPGCC_VER}${LAST_PATCH}
+    rpmbuild \
+	-D "version ${RPM_VER}" \
+	-D "release `date +%Y%m%d`" \
+	-D "prefix ${PREFIX}" \
+	-bb msp430-gdb.spec
+}
+
+package_dummy_deb()
 {
     set -e
     (
@@ -370,28 +436,42 @@ case $1 in
 	remove $(echo binutils-* gcc-* gdb-* mspgcc-* msp430-libc-2011* \
 	    msp430mcu-* mpfr-* gmp-* mpc-* \
 	    | fmt -1 | grep -v 'tar' | grep -v 'patch' | xargs)
-	remove tinyos *.files debian
+	remove tinyos *.files debian fedora
 	;;
 
     veryclean)
 	remove binutils-* gcc-* gdb-* mspgcc-* msp430-libc-2011* \
 	    msp430mcu-* mpfr-* gmp-* mpc-*
-	remove tinyos *.patch *.files debian
+	remove tinyos *.patch *.files debian fedora
 	;;
 
     deb)
 	download
 	build_binutils
-	package_binutils
+	package_binutils_deb
 	build_gcc
-	package_gcc
+	package_gcc_deb
 	build_mcu
-        package_mcu
+        package_mcu_deb
 	build_libc
-	package_libc
+	package_libc_deb
 	build_gdb
-	package_gdb
-	package_dummy
+	package_gdb_deb
+	package_dummy_deb
+	;;
+
+    rpm)
+	download
+	build_binutils
+	package_binutils_rpm
+	build_gcc
+	package_gcc_rpm
+	build_mcu
+        package_mcu_rpm
+	build_libc
+	package_libc_rpm
+	build_gdb
+	package_gdb_rpm
 	;;
 
     *)

@@ -55,6 +55,8 @@ package_deb()
 package_rpm()
 {
     echo Packaging ${NESC}
+    find fedora/usr/bin/ -type f \
+	| xargs perl -i -pe 's#'${PREFIX}'#/usr#'
     rpmbuild \
 	-D "version ${NESC_VER}" \
 	-D "release `date +%Y%m%d`" \

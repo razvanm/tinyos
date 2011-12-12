@@ -12,18 +12,19 @@ then
 fi
 : ${PREFIX:=$(pwd)/../local}
 
+LIBTOOLIZE=$(which libtoolize || which glibtoolize)
 
 build()
 {
     set -e
     (
 	aclocal
-	libtoolize --automake --force --copy
+	${LIBTOOLIZE} --automake --force --copy
 	automake --foreign --add-missing --copy
 	autoconf
     	./configure --prefix=${PREFIX}
     	make
-    	make install-strip
+	make install
     )
 }
 

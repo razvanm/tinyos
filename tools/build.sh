@@ -10,6 +10,12 @@ then
     PACKAGES_DIR=$(pwd)/../packages/${ARCH_TYPE}
     mkdir -p ${PACKAGES_DIR}
 fi
+
+if [[ "$1" == rpm ]]
+then
+    PREFIX=$(pwd)/${TINYOS_TOOLS}/fedora/usr
+fi
+
 : ${PREFIX:=$(pwd)/../local}
 
 LIBTOOLIZE=$(which libtoolize || which glibtoolize)
@@ -28,7 +34,7 @@ build()
     )
 }
 
-package()
+package_deb()
 {
     echo Packaging ${TINYOS_TOOLS}
     cd ${TINYOS_TOOLS}
@@ -42,6 +48,18 @@ package()
     dpkg-deb --build debian ${PACKAGES_DIR}/tinyos-tools-${TINYOS_TOOLS_VER}.deb
 }
 
+package_rpm()
+{
+    echo Packaging ${TINYOS_TOOLS}
+    find fedora/usr/bin/ -type f \
+	| xargs perl -i -pe 's#'${PREFIX}'#/usr#'
+    rpmbuild \
+	-D "version ${TINYOS_TOOLS_VER}" \
+	-D "release `date +%Y%m%d`" \
+	-D "prefix ${PREFIX}" \
+	-bb tinyos-tools.spec
+}
+
 case $1 in
     build)
 	build
@@ -53,7 +71,12 @@ case $1 in
 
     deb)
 	build
-	package
+	package_deb
+	;;
+
+    rpm)
+	build
+	package_rpm
 	;;
 
     *)

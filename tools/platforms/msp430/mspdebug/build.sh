@@ -1,6 +1,6 @@
 #!/bin/bash
 
-MSPDEBUG_VER=0.16
+MSPDEBUG_VER=0.18
 MSPDEBUG=mspdebug-${MSPDEBUG_VER}
 
 ARCH_TYPE=$(dpkg-architecture -qDEB_HOST_ARCH)

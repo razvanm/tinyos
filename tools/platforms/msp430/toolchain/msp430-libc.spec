@@ -1,4 +1,4 @@
-Summary: TinyOS-specific MSP430 libs
+Summary: TinyOS-specific MSP430 libc
 Name: msp430-libc-tinyos
 Version: %{version}
 Release: %{release}

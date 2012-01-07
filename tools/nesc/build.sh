@@ -31,10 +31,10 @@ build()
     tar -xzf ${NESC}.tar.gz
     set -e
     (
-    	cd ${NESC}
-    	./configure --prefix=${PREFIX}
-    	make
-    	make install-strip
+	cd ${NESC}
+	./configure --prefix=${PREFIX}
+	make
+	make install-strip
     )
 }
 
@@ -47,8 +47,8 @@ package_deb()
     mkdir -p debian/DEBIAN
     cat ../nesc.control \
 	| sed 's/@version@/'${NESC_VER}-`date +%Y%m%d`'/' \
-        | sed 's/@architecture@/'${ARCH_TYPE}'/' \
-        > debian/DEBIAN/control
+	| sed 's/@architecture@/'${ARCH_TYPE}'/' \
+	> debian/DEBIAN/control
     dpkg-deb --build debian ${PACKAGES_DIR}/nesc-${NESC_VER}.deb
 }
 
@@ -71,7 +71,7 @@ remove()
 	if [[ -a ${f} ]]
 	then
 	    echo Removing ${f}
-    	    rm -rf $f
+	    rm -rf $f
 	fi
     done
 }

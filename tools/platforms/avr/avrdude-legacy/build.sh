@@ -3,13 +3,19 @@
 AVRDUDE_VER=5.4
 AVRDUDE=avrdude-${AVRDUDE_VER}
 
-ARCH_TYPE=$(dpkg-architecture -qDEB_HOST_ARCH)
 if [[ "$1" == deb ]]
 then
+    ARCH_TYPE=$(dpkg-architecture -qDEB_HOST_ARCH)
     PREFIX=$(pwd)/${AVRDUDE}/debian/usr
     PACKAGES_DIR=$(pwd)/../../../../packages/${ARCH_TYPE}
     mkdir -p ${PACKAGES_DIR}
 fi
+
+if [[ "$1" == rpm ]]
+then
+    PREFIX=$(pwd)/${NESC}/fedora/usr
+fi
+
 : ${PREFIX:=$(pwd)/../../../../local}
 
 download()
@@ -53,6 +59,16 @@ package_avrdude()
     )
 }
 
+package_avrdude_rpm()
+{
+    echo Packaging ${AVRDUDE}
+    rpmbuild \
+	-D "version ${AVRDUDE_VER}" \
+	-D "release `date +%Y%m%d`" \
+	-D "prefix ${PREFIX}/.." \
+	-bb avrdude.spec
+}
+
 remove()
 {
     for f in $@
@@ -60,7 +76,7 @@ remove()
 	if [ -a ${f} ]
 	then
 	    echo Removing ${f}
-    	    rm -rf $f
+	    rm -rf $f
 	fi
     done
 }
@@ -71,17 +87,23 @@ case $1 in
 	;;
 
     clean)
-	remove ${AVRDUDE}
+	remove ${AVRDUDE} fedora
 	;;
 
     veryclean)
-	remove ${AVRDUDE}{,.tar.gz}
+	remove ${AVRDUDE}{,.tar.gz} fedora
 	;;
 
     deb)
 	download
 	build_avrdude
-	package_avrdude
+	package_avrdude_deb
+	;;
+
+    rpm)
+	download
+	build_avrdude
+	package_avrdude_rpm
 	;;
 
     *)

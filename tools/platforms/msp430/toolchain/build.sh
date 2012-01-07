@@ -32,7 +32,6 @@ PATCHES="
   msp430mcu-20110613-sf3400714.patch
 "
 
-
 MPFR_VER=2.4.2
 MPFR=mpfr-${MPFR_VER}
 GMP_VER=4.3.2
@@ -88,7 +87,7 @@ download()
 	|| wget http://sourceforge.net/projects/mspgcc/files/mspgcc/${MSPGCC}.tar.bz2
     # We need to unpack this in order to find what libc to download
     [[ -d ${MSPGCC} ]] \
-        || tar xjf ${MSPGCC}.tar.bz2
+	|| tar xjf ${MSPGCC}.tar.bz2
     MSP430MCU_VER=$(cat ${MSPGCC}/msp430mcu.version)
     MSP430MCU=msp430mcu-${MSP430MCU_VER}
     [[ -a ${MSP430MCU}.tar.bz2 ]] \
@@ -181,23 +180,23 @@ build_gcc()
 
     set -e
     (
-    	cd $GCC
+	cd $GCC
 	ln -s ../${MPFR} mpfr
 	ln -s ../${GMP} gmp
 	ln -s ../${MPC} mpc
-    	cat ../${MSPGCC}/msp430-gcc-${GCC_VER}-*.patch | patch -p1
+	cat ../${MSPGCC}/msp430-gcc-${GCC_VER}-*.patch | patch -p1
 	echo Extra patches...
 	cat ../msp430-gcc-*.patch | patch -p1
 	mkdir build
 	cd build
-    	../configure \
-    	    --prefix=${PREFIX} \
-    	    --target=msp430 \
-    	    --enable-languages=c
-        CPPFLAGS=-D_FORTIFY_SOURCE=0 make -j4
-    	make install
-    	rm -rf ${PREFIX}{/lib*/libiberty.a,/share/info,/share/locale,/share/man/man7}
-    	find ${PREFIX} -empty | xargs rm -rf
+	../configure \
+	    --prefix=${PREFIX} \
+	    --target=msp430 \
+	    --enable-languages=c
+	CPPFLAGS=-D_FORTIFY_SOURCE=0 make -j4
+	make install
+	rm -rf ${PREFIX}{/lib*/libiberty.a,/share/info,/share/locale,/share/man/man7}
+	find ${PREFIX} -empty | xargs rm -rf
     )
     ( cd $PREFIX ; find . -type f ) > msp430-gcc.files
 }
@@ -424,7 +423,7 @@ remove()
 	if [ -a ${f} ]
 	then
 	    echo Removing ${f}
-    	    rm -rf $f
+	    rm -rf $f
 	fi
     done
 }
@@ -454,7 +453,7 @@ case $1 in
 	build_gcc
 	package_gcc_deb
 	build_mcu
-        package_mcu_deb
+	package_mcu_deb
 	build_libc
 	package_libc_deb
 	build_gdb
@@ -469,7 +468,7 @@ case $1 in
 	build_gcc
 	package_gcc_rpm
 	build_mcu
-        package_mcu_rpm
+	package_mcu_rpm
 	build_libc
 	package_libc_rpm
 	build_gdb

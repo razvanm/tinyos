@@ -2,20 +2,27 @@
 
 BINUTILS_VER=2.17
 BINUTILS=binutils-${BINUTILS_VER}
+
 GCC_VER=4.1.2
 GCC=gcc-${GCC_VER}
 
 AVRLIBC_VER=1.4.7
 AVRLIBC=avr-libc-${AVRLIBC_VER}
 
-ARCH_TYPE=$(dpkg-architecture -qDEB_HOST_ARCH)
 if [[ "$1" == deb ]]
 then
+    ARCH_TYPE=$(dpkg-architecture -qDEB_HOST_ARCH)
     PREFIX=$(pwd)/debian/usr
-    PACKAGES_DIR=$(pwd)/../../../../packages/${ARCH_TYPE}
+    PACKAGES_DIR=$(pwd)/../../../../packages/debian/${ARCH_TYPE}
     mkdir -p ${PACKAGES_DIR}
     mkdir -p ${PACKAGES_DIR/${ARCH_TYPE}/all}
 fi
+
+if [[ "$1" == rpm ]]
+then
+    PREFIX=$(pwd)/fedora/usr
+fi
+
 : ${PREFIX:=$(pwd)/../../../../local}
 
 download()
@@ -52,7 +59,7 @@ build_binutils()
     ( cd $PREFIX ; find . -type f ) > avr-binutils.files
 }
 
-package_binutils()
+package_binutils_deb()
 {
     set -e
     (
@@ -69,12 +76,22 @@ package_binutils()
     )
 }
 
+package_binutils_rpm()
+{
+    VER=${BINUTILS_VER}
+    rpmbuild \
+	-D "version ${VER}" \
+	-D "release `date +%Y%m%d`" \
+	-D "prefix ${PREFIX}" \
+	-bb avr-binutils.spec
+}
+
 build_gcc()
 {
     echo Unpacking ${GCC}.tar.gz
     rm -rf ${GCC}
     tar -xjf ${GCC}.tar.bz2
-    
+
     set -e
     (
 	PATH=${PREFIX}/bin:${PATH}
@@ -96,7 +113,7 @@ build_gcc()
     ( cd $PREFIX ; find . -type f ) > avr-gcc.files
 }
 
-package_gcc()
+package_gcc_deb()
 {
     set -e
     (
@@ -117,6 +134,16 @@ package_gcc()
 	dpkg-deb --build debian \
 	    ${PACKAGES_DIR}/avr-gcc-tinyos-legacy-${VER}.deb
     )
+}
+
+package_gcc_rpm()
+{
+    VER=${GCC_VER}
+    rpmbuild \
+	-D "version ${VER}" \
+	-D "release `date +%Y%m%d`" \
+	-D "prefix ${PREFIX}" \
+	-bb avr-gcc.spec
 }
 
 build_libc()
@@ -150,7 +177,7 @@ build_libc()
     )
 }
 
-package_libc()
+package_libc_deb()
 {
     set -e
     (
@@ -175,7 +202,17 @@ package_libc()
     )
 }
 
-package_dummy()
+package_libc_rpm()
+{
+    VER=${AVRLIBC_VER}
+    rpmbuild \
+	-D "version ${VER}" \
+	-D "release `date +%Y%m%d`" \
+	-D "prefix ${PREFIX}" \
+	-bb avr-libc.spec
+}
+
+package_dummy_deb()
 {
     set -e
     (
@@ -197,7 +234,7 @@ remove()
 	if [ -a ${f} ]
 	then
 	    echo Removing ${f}
-    	    rm -rf $f
+	    rm -rf $f
 	fi
     done
 }
@@ -208,23 +245,33 @@ case $1 in
 	;;
 
     clean)
-	remove ${BINUTILS} ${GCC} ${AVRLIBC} tinyos *.files debian
+	remove ${BINUTILS} ${GCC} ${AVRLIBC} tinyos *.files debian fedora
 	;;
 
     veryclean)
 	remove {${BINUTILS},${GCC},${AVRLIBC}}{,.tar.gz,.tar.bz2,a.tar.bz2}
-	remove tinyos *.files debian
+	remove tinyos *.files debian fedora
 	;;
 
     deb)
 	download
 	build_binutils
-	package_binutils
+	package_binutils_deb
 	build_gcc
-	package_gcc
+	package_gcc_deb
 	build_libc
-	package_libc
-	package_dummy
+	package_libc_deb
+	package_dummy_deb
+	;;
+
+    rpm)
+	download
+	build_binutils
+	package_binutils_rpm
+	build_gcc
+	package_gcc_rpm
+	build_libc
+	package_libc_rpm
 	;;
 
     *)

@@ -3,13 +3,19 @@
 MSPDEBUG_VER=0.18
 MSPDEBUG=mspdebug-${MSPDEBUG_VER}
 
-ARCH_TYPE=$(dpkg-architecture -qDEB_HOST_ARCH)
 if [[ "$1" == deb ]]
 then
+    ARCH_TYPE=$(dpkg-architecture -qDEB_HOST_ARCH)
     PREFIX=$(pwd)/debian/usr
     PACKAGES_DIR=$(pwd)/../../../../packages/${ARCH_TYPE}
     mkdir -p ${PACKAGES_DIR}
 fi
+
+if [[ "$1" == rpm ]]
+then
+    PREFIX=$(pwd)/${NESC}/fedora/usr
+fi
+
 : ${PREFIX:=$(pwd)/../../../../local}
 
 download()
@@ -46,6 +52,16 @@ package_mspdebug()
     )
 }
 
+package_mspdebug_rpm()
+{
+    echo Packaging ${MSPDEBUG}
+    rpmbuild \
+	-D "version ${MSPDEBUG_VER}" \
+	-D "release `date +%Y%m%d`" \
+	-D "prefix ${PREFIX}/.." \
+	-bb mspdebug.spec
+}
+
 remove()
 {
     for f in $@
@@ -53,7 +69,7 @@ remove()
 	if [ -a ${f} ]
 	then
 	    echo Removing ${f}
-    	    rm -rf $f
+	    rm -rf $f
 	fi
     done
 }
@@ -64,17 +80,23 @@ case $1 in
 	;;
 
     clean)
-	remove ${MSPDEBUG} debian
+	remove ${MSPDEBUG} debian fedora
 	;;
 
     veryclean)
-	remove mspdebug-* debian
+	remove mspdebug-* debian fedora
 	;;
 
     deb)
 	download
 	build_mspdebug
-	package_mspdebug
+	package_mspdebug_deb
+	;;
+
+    rpm)
+	download
+	build_mspdebug
+	package_mspdebug_rpm
 	;;
 
     *)

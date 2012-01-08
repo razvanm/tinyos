@@ -8,14 +8,20 @@ GCC=gcc-${GCC_VER}
 MSPGCC_VER=20060801cvs
 MSPGCC=mspgcc-cvs
 
-ARCH_TYPE=$(dpkg-architecture -qDEB_HOST_ARCH)
 if [[ "$1" == deb ]]
 then
+    ARCH_TYPE=$(dpkg-architecture -qDEB_HOST_ARCH)
     PREFIX=$(pwd)/debian/usr
-    PACKAGES_DIR=$(pwd)/../../../../packages/${ARCH_TYPE}
+    PACKAGES_DIR=$(pwd)/../../../../packages/debian/${ARCH_TYPE}
     mkdir -p ${PACKAGES_DIR}
     mkdir -p ${PACKAGES_DIR/${ARCH_TYPE}/all}
 fi
+
+if [[ "$1" == rpm ]]
+then
+    PREFIX=$(pwd)/fedora/usr
+fi
+
 : ${PREFIX:=$(pwd)/../../../../local}
 
 download()
@@ -69,6 +75,16 @@ package_binutils()
     )
 }
 
+package_binutils_rpm()
+{
+    VER=${BINUTILS_VER}
+    rpmbuild \
+	-D "version ${VER}" \
+	-D "release `date +%Y%m%d`" \
+	-D "prefix ${PREFIX}" \
+	-bb msp430-binutils.spec
+}
+
 build_gcc()
 {
     echo Unpacking ${MSPGCC}.tar.gz
@@ -77,7 +93,7 @@ build_gcc()
     echo Unpacking ${GCC_CORE}.tar.gz
     rm -rf ${GCC}
     tar -xzf ${GCC_CORE}.tar.gz
-    
+
     set -e
     (
 	PATH=${PREFIX}/bin:${PATH}
@@ -96,7 +112,7 @@ build_gcc()
     ( cd $PREFIX ; find . -type f ) > msp430-gcc.files
 }
 
-package_gcc()
+package_gcc_deb()
 {
     set -e
     (
@@ -116,6 +132,16 @@ package_gcc()
 	dpkg-deb --build debian \
 	    ${PACKAGES_DIR}/msp430-gcc-tinyos-legacy-${VER}.deb
     )
+}
+
+package_gcc_rpm()
+{
+    VER=${GCC_VER}
+    rpmbuild \
+	-D "version ${VER}" \
+	-D "release `date +%Y%m%d`" \
+	-D "prefix ${PREFIX}" \
+	-bb msp430-gcc.spec
 }
 
 build_libc()
@@ -145,7 +171,7 @@ build_libc()
     )
 }
 
-package_libc()
+package_libc_deb()
 {
     set -e
     (
@@ -168,7 +194,17 @@ package_libc()
     )
 }
 
-package_dummy()
+package_libc_rpm()
+{
+    VER=${MSPGCC_VER}
+    rpmbuild \
+	-D "version ${VER}" \
+	-D "release `date +%Y%m%d`" \
+	-D "prefix ${PREFIX}" \
+	-bb msp430-libc.spec
+}
+
+package_dummy_deb()
 {
     set -e
     (
@@ -190,7 +226,7 @@ remove()
 	if [ -a ${f} ]
 	then
 	    echo Removing ${f}
-    	    rm -rf $f
+	    rm -rf $f
 	fi
     done
 }
@@ -201,23 +237,34 @@ case $1 in
 	;;
 
     clean)
-	remove ${BINUTILS} ${GCC} ${MSPGCC} tinyos *.files debian
+	remove ${BINUTILS} ${GCC} ${MSPGCC} tinyos *.files debian fedora
 	;;
 
     veryclean)
-	remove {${BINUTILS},${GCC},${GCC_CORE}}{,.tar.gz} tinyos *.files debian
+	remove {${BINUTILS},${GCC},${GCC_CORE}}{,.tar.gz,a.tar.bz2}
+	remove tinyos *.files debian fedora
 	remove ${MSPGCC}
 	;;
 
     deb)
 	download
 	build_binutils
-	package_binutils
+	package_binutils_deb
 	build_gcc
-	package_gcc
+	package_gcc_deb
 	build_libc
-	package_libc
-	package_dummy
+	package_libc_deb
+	package_dummy_deb
+	;;
+
+    rpm)
+	download
+	build_binutils
+	package_binutils_rpm
+	build_gcc
+	package_gcc_rpm
+	build_libc
+	package_libc_rpm
 	;;
 
     *)

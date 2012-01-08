@@ -3,13 +3,19 @@
 AVARICE_VER=2.11
 AVARICE=avarice-${AVARICE_VER}
 
-ARCH_TYPE=$(dpkg-architecture -qDEB_HOST_ARCH)
 if [[ "$1" == deb ]]
 then
+    ARCH_TYPE=$(dpkg-architecture -qDEB_HOST_ARCH)
     PREFIX=$(pwd)/${AVARICE}/debian/usr
     PACKAGES_DIR=$(pwd)/../../../../packages/${ARCH_TYPE}
     mkdir -p ${PACKAGES_DIR}
 fi
+
+if [[ "$1" == rpm ]]
+then
+    PREFIX=$(pwd)/${NESC}/fedora/usr
+fi
+
 : ${PREFIX:=$(pwd)/../../../../local}
 
 download()
@@ -26,14 +32,14 @@ build_avarice()
     set -e
     (
 	cd ${AVARICE}
-	./configure \
+	LIBS=-ldl ./configure \
 	    --prefix=${PREFIX}
 	make
 	make install
     )
 }
 
-package_avarice()
+package_avarice_deb()
 {
     set -e
     (
@@ -49,6 +55,16 @@ package_avarice()
     )
 }
 
+package_avarice_rpm()
+{
+    echo Packaging ${AVARICE}
+    rpmbuild \
+	-D "version ${AVARICE_VER}" \
+	-D "release `date +%Y%m%d`" \
+	-D "prefix ${PREFIX}/.." \
+	-bb avarice.spec
+}
+
 remove()
 {
     for f in $@
@@ -56,7 +72,7 @@ remove()
 	if [ -a ${f} ]
 	then
 	    echo Removing ${f}
-    	    rm -rf $f
+	    rm -rf $f
 	fi
     done
 }
@@ -67,17 +83,23 @@ case $1 in
 	;;
 
     clean)
-	remove ${AVARICE}
+	remove ${AVARICE} fedora
 	;;
 
     veryclean)
-	remove ${AVARICE}{,.tar.bz2}
+	remove ${AVARICE}{,.tar.bz2} fedora
 	;;
 
     deb)
 	download
 	build_avarice
-	package_avarice
+	package_avarice_deb
+	;;
+
+    rpm)
+	download
+	build_avarice
+	package_avarice_rpm
 	;;
 
     *)

@@ -7,7 +7,7 @@ if [[ "$1" == deb ]]
 then
     ARCH_TYPE=$(dpkg-architecture -qDEB_HOST_ARCH)
     PREFIX=$(pwd)/${TINYOS_TOOLS}/debian/usr
-    PACKAGES_DIR=$(pwd)/../packages/${ARCH_TYPE}
+    PACKAGES_DIR=$(pwd)/../packages/debian/${ARCH_TYPE}
     mkdir -p ${PACKAGES_DIR}
 fi
 
@@ -28,8 +28,8 @@ build()
 	${LIBTOOLIZE} --automake --force --copy
 	automake --foreign --add-missing --copy
 	autoconf
-    	./configure --prefix=${PREFIX}
-    	make
+	./configure --prefix=${PREFIX}
+	make
 	make install
     )
 }
@@ -43,15 +43,15 @@ package_deb()
     mkdir -p debian/DEBIAN
     cat ../tinyos-tools.control \
 	| sed 's/@version@/'${TINYOS_TOOLS_VER}-`date +%Y%m%d`'/' \
-        | sed 's/@architecture@/'${ARCH_TYPE}'/' \
-        > debian/DEBIAN/control
+	| sed 's/@architecture@/'${ARCH_TYPE}'/' \
+	> debian/DEBIAN/control
     dpkg-deb --build debian ${PACKAGES_DIR}/tinyos-tools-${TINYOS_TOOLS_VER}.deb
 }
 
 package_rpm()
 {
     echo Packaging ${TINYOS_TOOLS}
-    find fedora/usr/bin/ -type f \
+    find ${TINYOS_TOOLS}/fedora/usr/bin/ -type f \
 	| xargs perl -i -pe 's#'${PREFIX}'#/usr#'
     rpmbuild \
 	-D "version ${TINYOS_TOOLS_VER}" \
@@ -66,7 +66,8 @@ case $1 in
 	;;
 
     clean)
-	git clean -d -f -x
+	rm -rf ${TINYOS_TOOLS}
+	echo For cleaning the tree run: git clean -d -f -x
 	;;
 
     deb)

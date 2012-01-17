@@ -10,8 +10,7 @@
 # 94704.  Attention:  Intel License Inquiry.
 
 # Configuration
-$TOSDIR = "@TOSDIR@";
-$TOSDIR = $ENV{"TOSDIR"} if defined($ENV{"TOSDIR"});
+$TOSDIR = $ENV{"TOSDIR"};
 $nescc = "@nescc_prefix@/bin/nescc";
 $tossim = 0;
 $is_tos_1 = 0;

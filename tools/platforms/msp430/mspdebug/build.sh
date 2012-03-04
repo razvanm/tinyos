@@ -1,6 +1,6 @@
 #!/bin/bash
 
-MSPDEBUG_VER=0.18
+MSPDEBUG_VER=0.19
 MSPDEBUG=mspdebug-${MSPDEBUG_VER}
 
 if [[ "$1" == deb ]]
@@ -37,7 +37,7 @@ build_mspdebug()
     )
 }
 
-package_mspdebug()
+package_mspdebug_deb()
 {
     set -e
     (

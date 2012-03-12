@@ -79,7 +79,7 @@ download()
 	|| wget http://ftp.gnu.org/gnu/gdb/${GDB}a.tar.gz
 
     [[ -a ${MPFR}.tar.gz ]] \
-	|| wget http://www.mpfr.org/${MPFR}/${MPFR}.tar.gz
+	|| wget http://ftp.gnu.org/gnu/mpfr/${MPFR}.tar.gz
     [[ -a ${GMP}.tar.gz ]] \
 	|| wget http://ftp.gnu.org/gnu/gmp/${GMP}.tar.gz
     [[ -a ${MPC}.tar.gz ]] \
@@ -137,7 +137,7 @@ package_binutils_deb()
     (
 	VER=${BINUTILS_VER}
 	LAST_PATCH=$(last_patch msp430-binutils-*.patch)
-	DEB_VER=${VER}-LTS${MSPGCC_VER}${LAST_PATCH}-$(date +%Y%m%d)
+	DEB_VER=${VER}-LTS${MSPGCC_VER}${LAST_PATCH}
 	cd ${BINUTILS}
 	mkdir -p debian/DEBIAN
 	cat ../msp430-binutils.control \
@@ -209,7 +209,7 @@ package_gcc_deb()
     (
 	VER=${GCC_VER}
 	LAST_PATCH=$(last_patch msp430-gcc-*.patch)
-	DEB_VER=${VER}-LTS${MSPGCC_VER}${LAST_PATCH}-$(date +%Y%m%d)
+	DEB_VER=${VER}-LTS${MSPGCC_VER}${LAST_PATCH}
 	cd ${GCC}
 	mkdir -p debian/DEBIAN
 	cat ../msp430-gcc.control \
@@ -260,7 +260,7 @@ package_mcu_deb()
     (
 	VER=${MSP430MCU_VER}
 	LAST_PATCH=$(last_patch msp430mcu-*.patch)
-	DEB_VER=${VER}-LTS${MSPGCC_VER}${LAST_PATCH}-$(date +%Y%m%d)
+	DEB_VER=${VER}-LTS${MSPGCC_VER}${LAST_PATCH}
 	cd ${MSP430MCU}
 	rsync -a -m ../debian/usr debian
 	(
@@ -315,7 +315,7 @@ package_libc_deb()
     (
 	VER=${MSP430LIBC_VER}
 	LAST_PATCH=$(last_patch msp430-libc-*.patch)
-	DEB_VER=${VER}-LTS${MSPGCC_VER}${LAST_PATCH}-$(date +%Y%m%d)
+	DEB_VER=${VER}-LTS${MSPGCC_VER}${LAST_PATCH}
 	cd ${MSP430LIBC}
 	rsync -a -m ../debian/usr debian
 	(
@@ -373,7 +373,7 @@ package_gdb_deb()
     (
 	VER=${GDB_VER}
 	LAST_PATCH=$(last_patch msp430-gdb-*.patch)
-	DEB_VER=${VER}-LTS${MSPGCC_VER}${LAST_PATCH}-$(date +%Y%m%d)
+	DEB_VER=${VER}-LTS${MSPGCC_VER}${LAST_PATCH}
 	cd ${GDB}
 	mkdir -p debian/DEBIAN
 	cat ../msp430-gdb.control \
